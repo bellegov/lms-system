@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  lms-db:
+    image: postgres:15-alpine
+    container_name: lms-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_password
+      POSTGRES_DB: lms_database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lms_admin -d lms_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  lms-backend:
+    build: ./lms-backend 
+    container_name: lms-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      lms-db:
+        condition: service_healthy 
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://lms-db:5432/lms_database
+      SPRING_DATASOURCE_USERNAME: lms_admin
+      SPRING_DATASOURCE_PASSWORD: lms_password
